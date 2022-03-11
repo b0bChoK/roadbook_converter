@@ -7,6 +7,7 @@ authors = ["DEWAS Albert <b0b_ChoK@yahoo.fr>"]
 [tool.poetry.dependencies]
 python = "^3.10"
 pdf2image = "^1.16.0"
+Pillow = "^9.0.1"
 
 [tool.poetry.dev-dependencies]
 
