@@ -1,0 +1,9 @@
+[DEFAULT]
+page_width = 1654
+left_margin = 34
+right_margin = page_width - 1608
+left_column_width = 790 - 34
+right_column_width = page_width - 852
+top_margin = 238
+bottom_margin = 2130
+case_per_column = 8
