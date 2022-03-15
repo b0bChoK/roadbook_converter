@@ -3,6 +3,7 @@ from ast import arg
 import os
 import argparse
 import configparser
+from typing import NamedTuple
 
 from turtle import right
 from pdf2image import convert_from_path, convert_from_bytes
@@ -16,6 +17,66 @@ from pdf2image.exceptions import (
 # Leave to None if installed on the OS or specify the bin directory
 POPPLER_PATH = "poppler-22.01.0/Library/bin"
 
+class PageConfig(NamedTuple):
+    case_go_up: bool
+    case_per_column: int
+    column_1l_border : int
+    column_1r_border : int
+    column_2l_border : int
+    column_2r_border : int
+    top_border : int
+    bottom_border: int
+    case_height: int
+
+def load_margin_configuration(conf, image_size) -> PageConfig:
+    config = configparser.ConfigParser()
+    config.readfp(open(conf))
+
+    width, height = image_size
+    A4 = (21, 29.7)
+
+    case_order_go_up = config['DEFAULT']['bottom_to_top'] == 'yes'
+    use_cm = config['DEFAULT']['use_cm'] == 'yes'
+    case_per_column = int(config['DEFAULT']['case_per_column'])
+
+    if use_cm:
+        left_margin = float(config['CM_A4']['left_margin'])
+        right_margin = float(config['CM_A4']['right_margin'])
+        left_column_width = float(config['CM_A4']['left_column_width'])
+        right_column_width = float(config['CM_A4']['right_column_width'])
+        top_margin = float(config['CM_A4']['top_margin'])
+        bottom_margin = float(config['CM_A4']['bottom_margin'])
+
+        column_1l_border = (left_margin / A4[0]) * width
+        column_1r_border = ((left_margin + left_column_width) / A4[0]) * width
+        column_2l_border = ((A4[0] - right_margin - right_column_width) / A4[0]) * width
+        column_2r_border = ((A4[0] - right_margin) / A4[0]) * width
+        top_border = (top_margin / A4[1]) * height
+        bottom_border = ((A4[1] - bottom_margin) / A4[1]) * height
+        case_height = (bottom_border - top_border) / case_per_column
+    else:
+        left_margin = int(config['PXL']['left_margin'])
+        right_margin = int(config['PXL']['right_margin'])
+        left_column_width = int(config['PXL']['left_column_width'])
+        right_column_width = int(config['PXL']['right_column_width'])
+        top_margin = int(config['PXL']['top_margin'])
+        bottom_margin = int(config['PXL']['bottom_margin'])
+
+        column_1l_border = left_margin
+        column_1r_border = left_margin + left_column_width
+        column_2l_border = width - right_margin - right_column_width
+        column_2r_border = width - right_margin
+        top_border = top_margin
+        bottom_border = height - bottom_margin
+        case_height = (bottom_border - top_border) / case_per_column
+
+    return PageConfig(case_order_go_up,
+                        case_per_column,
+                        int(column_1l_border), int(column_1r_border),
+                        int(column_2l_border), int(column_2r_border),
+                        int(top_border), int(bottom_border),
+                        int(case_height))
+
 def main():
     parser = argparse.ArgumentParser(description='Convert FFM pdf roadbook to image, 1 image per case.')
     parser.add_argument('files', metavar='N', type=str, nargs='+',
@@ -25,29 +86,7 @@ def main():
 
     args = parser.parse_args()
 
-    outdir = args.outdir
-
-    config = configparser.ConfigParser()
-    config.readfp(open(args.conf))
-
-    page_width = config['DEFAULT']['page_width']
-    # page_width = 1654
-    left_margin = config['DEFAULT']['left_margin']
-    # left_margin = 34
-    right_margin = config['DEFAULT']['right_margin']
-    # right_margin = page_width - 1608
-    left_column_width = config['DEFAULT']['left_column_width']
-    # left_column_width = 790 - 34
-    # # right_column_left_border = 852 
-    right_column_width = config['DEFAULT']['right_column_width']
-    # right_column_width = page_width - 852
-    top_margin = config['DEFAULT']['top_margin']
-    # top_margin = 238
-    bottom_margin = config['DEFAULT']['bottom_margin']
-    # bottom_margin = 2130
-    case_per_column = config['DEFAULT']['case_per_column']
-    # case_per_column = 8
-    case_height = int((bottom_margin - top_margin) / case_per_column)
+    outdir = args.outdir  
 
     for file in args.files:
         print("Convert pdf", file)
@@ -59,23 +98,37 @@ def main():
         except OSError as error:
             pass
         
+        page_config = load_margin_configuration(args.conf, images[0].size)
+
         cpt = 1
         for i in range(len(images)):
             # Save pages as images in the pdf
             #images[i].save(os.path.join(case_dir, str(i) +'.jpg'), 'JPEG')
             
-            # crop left column
-            for j in reversed(range(case_per_column)):
-                param = (left_margin, top_margin + (case_height * j), left_margin + left_column_width, top_margin + (case_height * (j+1)))
-                case = images[i].crop(param)
-                case.save(os.path.join(case_dir, "case_" + str(cpt) +'.jpg'), 'JPEG')
-                cpt+=1
+            if page_config.case_go_up:
 
-            # crop right column
-            for j in reversed(range(case_per_column)):
-                case = images[i].crop((page_width - right_column_width, top_margin + (case_height * j), page_width - right_margin, top_margin + (case_height * (j+1))))
-                case.save(os.path.join(case_dir, "case_" + str(cpt) +'.jpg'), 'JPEG')
-                cpt+=1
+                # crop left column
+                for j in reversed(range(page_config.case_per_column)):
+                    param = (page_config.column_1l_border,
+                            page_config.top_border + (page_config.case_height * j),
+                            page_config.column_1r_border,
+                            page_config.top_border + (page_config.case_height * (j+1)))
+                    case = images[i].crop(param)
+                    case.save(os.path.join(case_dir, "case_" + str(cpt) +'.jpg'), 'JPEG')
+                    cpt+=1
+
+                # crop right column
+                for j in reversed(range(page_config.case_per_column)):
+                    param = (page_config.column_2l_border,
+                            page_config.top_border + (page_config.case_height * j),
+                            page_config.column_2r_border,
+                            page_config.top_border + (page_config.case_height * (j+1)))
+                    case = images[i].crop(param)
+                    case.save(os.path.join(case_dir, "case_" + str(cpt) +'.jpg'), 'JPEG')
+                    cpt+=1
+
+            else:
+                print("Case ordered from top to bottom not supported for now")
 
 
 if __name__ == "__main__":

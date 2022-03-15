@@ -1,9 +1,20 @@
 [DEFAULT]
-page_width = 1654
-left_margin = 34
-right_margin = page_width - 1608
-left_column_width = 790 - 34
-right_column_width = page_width - 852
-top_margin = 238
-bottom_margin = 2130
+bottom_to_top = yes
+use_cm = no
 case_per_column = 8
+
+[PXL]
+left_margin = 34
+right_margin = 46
+left_column_width = 756
+right_column_width = 756
+top_margin = 238
+bottom_margin = 209
+
+[CM_A4]
+left_margin = 0.4
+right_margin = 0.6
+left_column_width = 9.4
+right_column_width = 9.4
+top_margin = 3
+bottom_margin = 2.7
