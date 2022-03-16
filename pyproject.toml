@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "roadbook_converter"
-version = "0.2.0"
+version = "0.2.1"
 description = ""
 authors = ["DEWAS Albert <b0b_ChoK@yahoo.fr>"]
 

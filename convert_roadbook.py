@@ -104,33 +104,32 @@ def main():
         if len(images) > 0:
             images[0].save(os.path.join(case_dir, 'apage_0.jpg'), 'JPEG')
 
+        # crop left column
+        if page_config.case_go_up:
+            case_range = reversed(range(page_config.case_per_column))
+        else:
+            case_range = range(page_config.case_per_column)
+
         cpt = 1
         for i in range(len(images)):
-            if page_config.case_go_up:
+            for j in case_range:
+                param = (page_config.column_1l_border,
+                        page_config.top_border + (page_config.case_height * j),
+                        page_config.column_1r_border,
+                        page_config.top_border + (page_config.case_height * (j+1)))
+                case = images[i].crop(param)
+                case.save(os.path.join(case_dir, "case_" + str(cpt) +'.jpg'), 'JPEG')
+                cpt+=1
 
-                # crop left column
-                for j in reversed(range(page_config.case_per_column)):
-                    param = (page_config.column_1l_border,
-                            page_config.top_border + (page_config.case_height * j),
-                            page_config.column_1r_border,
-                            page_config.top_border + (page_config.case_height * (j+1)))
-                    case = images[i].crop(param)
-                    case.save(os.path.join(case_dir, "case_" + str(cpt) +'.jpg'), 'JPEG')
-                    cpt+=1
-
-                # crop right column
-                for j in reversed(range(page_config.case_per_column)):
-                    param = (page_config.column_2l_border,
-                            page_config.top_border + (page_config.case_height * j),
-                            page_config.column_2r_border,
-                            page_config.top_border + (page_config.case_height * (j+1)))
-                    case = images[i].crop(param)
-                    case.save(os.path.join(case_dir, "case_" + str(cpt) +'.jpg'), 'JPEG')
-                    cpt+=1
-
-            else:
-                print("Case ordered from top to bottom not supported for now")
-
+            # crop right column
+            for j in case_range:
+                param = (page_config.column_2l_border,
+                        page_config.top_border + (page_config.case_height * j),
+                        page_config.column_2r_border,
+                        page_config.top_border + (page_config.case_height * (j+1)))
+                case = images[i].crop(param)
+                case.save(os.path.join(case_dir, "case_" + str(cpt) +'.jpg'), 'JPEG')
+                cpt+=1
 
 if __name__ == "__main__":
     main()

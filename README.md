@@ -6,8 +6,8 @@ This python script is made under a Poetry environement.
 ## Setup environment
 This python project requier Python 3.10 and Poetry 1.1.13 (environment manager, good stuff).
 See how to install both of them depending your OS :
-https://www.python.org/downloads/
-https://python-poetry.org/docs/
+- https://www.python.org/downloads/
+- https://python-poetry.org/docs/
 
 ### Install Poppler
 *pdf2image* needs to have *poppler*, see here https://pypi.org/project/pdf2image/ how to get *poppler* depending your OS.
@@ -86,7 +86,7 @@ poetry run python convert_roadbook.py -c my_page_config. toml a_roadbook.pdf
 
 ###### The DEFAULT section
 The default section define the direction of the case reading (bottom to top or top to bottom), the margin type you want to use (pixel or centimeter) and the number of case per column.
-- *bottom_to_top* : yes / no, yes read bottom to top, no read top to bottom (not implemented yet)
+- *bottom_to_top* : yes / no, yes read bottom to top, no read top to bottom
 - *use_cm* : yes / no, yes will use the margin define in the **CM_A4** section, no will use the **PXL** section margin.
 - case_per_column : interger, the number of case per column
 
