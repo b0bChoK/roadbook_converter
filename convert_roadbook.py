@@ -81,7 +81,7 @@ def main():
     parser = argparse.ArgumentParser(description='Convert FFM pdf roadbook to image, 1 image per case.')
     parser.add_argument('files', metavar='N', type=str, nargs='+',
                         help='files to convert')
-    parser.add_argument('-o', '--outdir', type=str, help='output directory where image will be stored')
+    parser.add_argument('-o', '--outdir', type=str, default="", help='output directory where images will be stored')
     parser.add_argument('-c', '--conf', type=str, default="page_config.toml", help='page configuration')
 
     args = parser.parse_args()
@@ -100,11 +100,12 @@ def main():
         
         page_config = load_margin_configuration(args.conf, images[0].size)
 
+        # Save the first page as images in the pdf for illustration
+        if len(images) > 0:
+            images[0].save(os.path.join(case_dir, 'apage_0.jpg'), 'JPEG')
+
         cpt = 1
         for i in range(len(images)):
-            # Save pages as images in the pdf
-            #images[i].save(os.path.join(case_dir, str(i) +'.jpg'), 'JPEG')
-            
             if page_config.case_go_up:
 
                 # crop left column
